@@ -8,7 +8,7 @@ def fndispatch(func):
     join = lambda v1, v2=None: v1 + (v2 or "")
 
     def register_value(cls: str, fn: str):
-        value = join(cls, fn)
+        value = join(cls.__name__, fn)
 
         def decorator_wrapper(decorator_func):
             registry[value] = decorator_func
@@ -17,7 +17,7 @@ def fndispatch(func):
         return decorator_wrapper
 
     def wrapper(cls, fn, *args, **kwargs):
-        value = join(cls, fn)
+        value = join(cls.__name__, fn)
         if value in registry:
             return registry[value](cls, fn, *args, **kwargs)
         else:

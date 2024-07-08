@@ -1,6 +1,7 @@
 """remote execution of sentence transformers finetuning."""
 
 import os
+import logging
 
 from typing import Any, Tuple
 
@@ -10,6 +11,9 @@ from llama_index.finetuning.embeddings.common import EmbeddingQAFinetuneDataset
 from langrunner.remote import check, prolog, run, epilog
 from langrunner.utils import serialize, deserialize
 
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 @check.register(SentenceTransformersFinetuneEngine, None)
 def _check(cls, fn) -> bool:
@@ -23,7 +27,6 @@ def _check(cls, fn) -> bool:
 
 @prolog.register(SentenceTransformersFinetuneEngine, "finetune")
 def _prolog(cls, fn, inputdir, outputdir, cls_params=None, fn_params=None):
-
     dataset = cls_params["dataset"]
     val_dataset = cls_params["val_dataset"]
 
@@ -49,7 +52,15 @@ def _prolog(cls, fn, inputdir, outputdir, cls_params=None, fn_params=None):
     serialize(extra_params, extraparams_fp, mode="json")
 
     model_dir = cls_params["model_output_path"]
-    os.symlink(outputdir, model_dir)
+
+    if os.path.islink(model_dir):
+        logging.info(f"{model_dir} link exists from previous run, overwriting it.")
+        os.remove(model_dir)
+        os.symlink(outputdir, model_dir)
+    else:
+        if os.path.exists(model_dir):
+            raise FileExistsError("{model_dir} already exists, make sure to provide a unique path in every run.")
+        os.symlink(outputdir, model_dir)
 
 
 @run.register(SentenceTransformersFinetuneEngine, "finetune")

@@ -1,6 +1,7 @@
 """langrunner utils module"""
 
-from .utils import (
+from langrunner.utils.fntools import fndispatch
+from langrunner.utils.utils import (
     run_shellcommand,
     configure_aws,
     configure_gcp,
@@ -8,7 +9,6 @@ from .utils import (
     serialize,
     deserialize,
 )
-from .fntools import fndispatch
 
 __all__ = [
     "run_shellcommand",

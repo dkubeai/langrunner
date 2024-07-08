@@ -7,7 +7,7 @@ import logging
 import inspect
 import importlib
 import uuid
-from typing import Type, Tuple, Dict, List
+from typing import Type, Tuple, Dict, List, Any
 
 from pydantic import BaseModel, validator
 from unique_names_generator import get_random_name
@@ -28,13 +28,13 @@ class LangRunner(ABC):
 
     lang_resource: Type
     lang_module: str
+    resource_obj: Any = None
     run_name: str = str(uuid.uuid4())
     resource_params: dict = {}
     resource_isremote: bool = False
     rundir: str = None
-    providers: List[str] = ["aws", "gcp", "azure", "kubernetes"]
     SUPPORTED_MODULES: Tuple[str, ...] = ("llama_index", "langchain", "autogen")
-    MODULES_MAP: Dict[str:str] = {
+    MODULES_MAP: Dict[str, str] = {
         "llama_index": "li",
         "langchain": "lc",
         "autogen": "ag",
@@ -53,31 +53,37 @@ class LangRunner(ABC):
             raise ValueError("lang_resource argument must be a class.")
         return v
 
-    @validator("lang_resource")
+    @validator("lang_module")
     @classmethod
     def validate_module(cls, v):
         """Validates if v is from supported module"""
-        mod = v.__module__.split(".")[0]
-        if mod not in cls.SUPPORTED_MODULES:
+        if v not in cls.SUPPORTED_MODULES:
             raise ValueError(
                 "lang_resource should be from one of the supported module {SUPPORTED_MODULES}"
             )
-        # cls.lang_module = cls.MODULES_MAP[mod]
-        cls.lang_module = mod
         return v
 
     @classmethod
     def from_resource(cls, resource, **resource_params):
         """Return an object based on the lang resource"""
 
-        obj = cls(lang_resource=resource)
+        obj = cls()
+        obj.lang_resource = resource
 
         obj.resource_params = resource_params
+
+        obj.lang_module = resource.__module__.split(".")[0]
 
         # check if this lang resource is supported for remote execution.
         # if yes then save the lang rsrc for remote init.
 
-        _ = importlib.import_module(obj.lang_module, package="langrunner")
+        module_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), obj.lang_module, "__init__.py")
+        print(f"{module_path}", flush=True)
+        spec = importlib.util.spec_from_file_location(obj.lang_module, module_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        #imp = importlib.import_module(obj.lang_module, package="langrunner")
         # isremote = module.isremote(obj.lang_resource)
         # obj.resource_isremote = isremote
 
@@ -86,7 +92,8 @@ class LangRunner(ABC):
 
         if isremote is False:
             # initialize the object locally
-            return obj.lang_resource(**resource_params)
+            self.resource_obj = obj.lang_resource(**resource_params)
+            return self.resource_obj
         else:
             # do not initialize object locally. Init on the fly when a function in remote class is called.
             obj.rundir = os.path.expanduser(f"~/.cloudrunner/{obj.run_name}")
@@ -99,40 +106,40 @@ class LangRunner(ABC):
     def __getattribute__(self, item):
         try:
             # check if call is for any attr of this runner class
-            return self.__getattribute__(item)
+            return super().__getattribute__(item)
         except AttributeError as ae:
-            # check if item is in resource class
-            members = []
-            for name, _ in inspect.getmembers(self.lang_resource):
-                members.append(name)
-            if item in members:
-                if callable(item):
-                    if item.startswith("_") or check(self.lang_resource, item) is False:
-                        # private methods or no remote support. run locally
-                        return self.lang_resource.__getattribute__(item)
+            # if the resource is not enabled for remote exec
+            if self.resource_isremote is False:
+                return self.resource_obj.__getattribute__(item)
+            else:
+                pubfns = [m[0] for m in inspect.getmembers(self.lang_resource, predicate=inspect.isroutine) if not m[0].startswith('_')]
+                if item in pubfns:
+                    # check if this pubfn is supported for remote exec
+                    if check(self.lang_resource, item) is False:
+                        raise ValueError(f"{self.lang_resource} is set for remote but public method {item} is not supported for remote.")
                     else:
-
                         def remote_wrapper(*args, **kwargs):
-                            return self._remotecall(item, *args, **kwargs)
-
+                            funcattr = getattr(self.lang_resource, item)
+                            return self.remotecall(funcattr, *args, **kwargs)
                         return remote_wrapper
                 else:
-                    return self.lang_resource.__getattribute__(item)
-            else:
-                raise ae
+                    #at this point, it could be one of the parameter of the lang class
+                    return self.resource_params[item]
+        else:
+            raise ae
 
 
 class CloudRunner(LangRunner):
     """Class to run lang resources on public cloud infra"""
 
-    cloud_providers = ["aws", "gcp", "azure"]
+    cloud_providers = ["AWS", "GCP", "Azure", "Kubernetes"]
 
     @classmethod
     def from_resource(cls, resource, **resource_params):
         """Return an object based on the lang resource"""
         obj = super(CloudRunner, cls).from_resource(resource, **resource_params)
 
-        if obj.__class__ == "LangRunner" and obj.resource_isremote is True:
+        if isinstance(obj, CloudRunner) and obj.resource_isremote is True:
             obj.setup_cloud()
         return obj
 
@@ -141,17 +148,21 @@ class CloudRunner(LangRunner):
         is_yamlfp = os.path.isfile(credsf) and credsf.lower().endswith(
             (".yaml", ".yml")
         )
-        assert is_yamlfp(
-            credsf
-        ), "data should point to a yaml file with cloud credentials in it, please see examples/document"
+        assert is_yamlfp, "data should point to a yaml file with cloud credentials in it, please see examples/document"
 
         with open(credsf, "r", encoding="utf-8") as file:
             creds = yaml.safe_load(file)
 
         for provider in self.cloud_providers:
-            if (provider in creds) and (creds[provider]["enabled"] == "true"):
-                umod = importlib.import_module("utils", package="langrunner")
-                fn = getattr(umod, f"configure_{provider}")
+            if (provider in creds) and creds[provider]["enabled"]:
+
+                module_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "utils", "__init__.py")
+                spec = importlib.util.spec_from_file_location("utils", module_path)
+                umod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(umod)
+
+                del creds[provider]["enabled"]
+                fn = getattr(umod, f"configure_{provider.lower()}")
                 fn(**creds[provider])
                 try:
                     cloud_provider_class = getattr(sky.clouds, provider.upper())
@@ -159,7 +170,6 @@ class CloudRunner(LangRunner):
                         logging.info(
                             "{provider.upper()} (OK). credentials provided are valid."
                         )
-                        self._useclouds.append(provider)
                     else:
                         logging.error(
                             "{provider.upper()} (SKIP). credentials provided are invalid."
@@ -182,16 +192,16 @@ class CloudRunner(LangRunner):
 
         prolog(
             self.lang_resource,
-            func,
+            func.__name__,
             inputs_dir,
             outputs_dir,
             cls_params=self.resource_params,
             fn_params=fn_params,
         )
 
-        file_mounts = {inputs_dir: "/mnt/input"}
+        file_mounts = {"/mnt/input": inputs_dir}
         task_name = get_random_name(separator="-", style="lowercase")
-        task_name = f"{self.run_name} - {task_name}"
+        #task_name = f"{self.run_name} - {task_name}"
         workdir = os.path.expanduser("./")
 
         rc_args = " ".join([self.lang_resource.__name__, func.__name__, self.run_name])
@@ -208,15 +218,16 @@ class CloudRunner(LangRunner):
 
         sky_task.set_resources(
             sky.Resources(
-                cloud=[
-                    getattr(sky.clouds, provider.upper()) for provider in self.providers
-                ],
+                #cloud=[
+                    #getattr(sky.clouds, provider)() for provider in self.cloud_providers
+                #],
                 accelerators={"T4": 1},
                 use_spot=True,
             )
         )
 
-        sky_clustername = f"lgr-{self.run_name}"
+        #sky_clustername = f"lgr-{self.run_name}"
+        sky_clustername = f"lgr-{task_name}"
 
         clusters = sky.status()
         if sky_clustername not in [cluster["name"] for cluster in clusters]:
@@ -242,4 +253,4 @@ class CloudRunner(LangRunner):
         logging.info("bringing down the sky cluster %s", sky_clustername)
         sky.down(sky_clustername)
 
-        return epilog(self.lang_resource, func, outputs_dir)
+        return epilog(self.lang_resource, func.__name__, outputs_dir)
