@@ -1,5 +1,6 @@
-skypilot
+skypilot[aws,gcp,kubernetes]
 unique-names-generator
-ray 
 dill 
 llama-index
+llama-index-finetuning
+fire

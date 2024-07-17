@@ -5,13 +5,16 @@ import gc
 import os
 import functools
 
+from typing import Any
+from llama_index.core.llms.llm import LLM
 from llama_index.finetuning.types import BaseLLMFinetuneEngine
-from llama_index.llms.huggingface import HuggingFaceLLM
+from langrunner.remote import implements, LangrunnerRemoteResource, remotefunc
+
 
 logger = logging.getLogger(__name__)
 
 
-class SFTTrainingEngine(BaseLLMFinetuneEngine):
+class SFTFinetuneEngine(BaseLLMFinetuneEngine):
     """SFT trainer engine implementation."""
 
     def __init__(
@@ -138,6 +141,7 @@ class SFTTrainingEngine(BaseLLMFinetuneEngine):
 
     def finetune(self) -> None:
         import torch
+        from llama_index.llms.huggingface import HuggingFaceLLM
 
         self.training_data = self.load_dataset()
         self.tokenizer = self.load_tokenizer()
@@ -167,7 +171,7 @@ class SFTTrainingEngine(BaseLLMFinetuneEngine):
             f"fine tuning complete, saved model @ {self.output_dir/self.finetuned_modelname}"
         )
 
-    def get_current_job(self) -> FineTuningJob:
+    def get_current_job(self) -> Any:
         """Get current job."""
         pass
 
@@ -203,3 +207,10 @@ class SFTTrainingEngine(BaseLLMFinetuneEngine):
             **model_kwargs,
         )
         return llm
+
+
+#@implements("langrunner.llama_index.SFTFinetuneEngine")
+class SFTFinetuneEngineRemote(LangrunnerRemoteResource):
+    """Remote exec compatible implementation of SFTFinetuneEngineRemote."""
+
+    pass
