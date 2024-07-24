@@ -1,6 +1,6 @@
 import os
 import functools
-from typing import Union, List, Any
+from typing import Union, List, Any, Optional, Dict
 from pydantic import BaseModel, ValidationInfo, field_validator, ConfigDict
 from pathlib import Path
 
@@ -30,14 +30,16 @@ class RunnerSettings(BaseModel):
         },
     )
 
-    cpus: int = 4
-    memory: int = 16
+    cpus: Union[None, int, str] = None
+    memory: Union[None, str, int] = None
     accelerator: str = "T4"
     accelerator_count: int = 1
     instance_type: str = "auto"
     use_runners: Union[List[Any], str] = "auto"
-    use_accelerator: Union[bool, str] = "auto"
-    use_spot: bool = True
+    use_accelerator: Union[bool, str] = True #"auto"
+    use_spot: bool = False
+    ports: int = 8080
+    envs: Optional[Dict[str, str]] = None
     credentials_file: Union[str, Path] = os.path.join(
         os.path.expanduser("~"), ".langrunner", "credentials.yaml"
     )
@@ -52,7 +54,7 @@ class RunnerSettings(BaseModel):
 
     @field_validator("cpus", "memory", "accelerator_count")
     def field_must_be_ge_1(cls, value, info: ValidationInfo) -> int:
-        if value <= 1:
+        if isinstance(value, int) and value < 1:
             raise ValueError(f"{info.field_name} must be set to value >= 1")
         return value
 

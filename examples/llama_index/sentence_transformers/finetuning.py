@@ -5,16 +5,13 @@ import os
 from llama_index.core.evaluation import EmbeddingQAFinetuneDataset
 from os.path import abspath, dirname, join
 
-from langrunner.llama_index.finetuning import SentenceTransformersFinetuneEngine
-#from llama_index.finetuning import SentenceTransformersFinetuneEngine
-
-try:
-    __import__("langrunner")
-except ImportError:
-    sys.path.append(dirname(abspath(join(dirname(__file__), "../.."))))
+from llama_index.finetuning import SentenceTransformersFinetuneEngine
 
 train_dataset = EmbeddingQAFinetuneDataset.from_json("train_dataset.json")
 val_dataset = EmbeddingQAFinetuneDataset.from_json("val_dataset.json")
+
+import langrunner
+SentenceTransformersFinetuneEngine = langrunner.runnable(SentenceTransformersFinetuneEngine)
 
 finetune_engine = SentenceTransformersFinetuneEngine(
     train_dataset,

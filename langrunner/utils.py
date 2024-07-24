@@ -5,7 +5,6 @@ import shutil
 import subprocess
 import pickle
 import codecs
-import dill
 import json
 
 
@@ -49,6 +48,7 @@ def serialize(obj, filepath, mode="json"):
         with open(filepath, "w", encoding="utf-8") as fp:
             json.dump(obj, fp)
     if mode == "pickle":
+        import dill
         serialized = dill.dumps((obj))
         with open(filepath, "wb") as fp:
             fp.write(serialized)
@@ -60,5 +60,6 @@ def deserialize(filepath, mode="json"):
         with open(filepath, "r", encoding="utf-8") as fp:
             return json.load(fp)
     if mode == "pickle":
+        import dill
         with open(filepath, "rb") as fp:
             return dill.loads(fp)

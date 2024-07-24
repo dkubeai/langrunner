@@ -1,0 +1,13 @@
+dill 
+unique-names-generator
+llama-index==0.10.53
+llama-index-finetuning==0.1.10
+torch
+tensorboard
+scipy
+peft==0.4.0
+bitsandbytes==0.40.2
+transformers==4.32.0
+trl==0.4.7
+accelerate
+llama_index.llms.huggingface

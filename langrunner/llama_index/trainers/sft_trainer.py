@@ -8,7 +8,6 @@ import functools
 from typing import Any
 from llama_index.core.llms.llm import LLM
 from llama_index.finetuning.types import BaseLLMFinetuneEngine
-from langrunner.remote import implements, LangrunnerRemoteResource, remotefunc
 
 
 logger = logging.getLogger(__name__)
@@ -74,6 +73,7 @@ class SFTFinetuneEngine(BaseLLMFinetuneEngine):
 
     def peft_params(self):
         """Fill lora config"""
+        from peft import LoraConfig
         return LoraConfig(
             lora_alpha=self.lora_alpha,
             lora_dropout=self.lora_dropout,
@@ -86,10 +86,34 @@ class SFTFinetuneEngine(BaseLLMFinetuneEngine):
         """Fill training params"""
         from transformers import TrainingArguments
 
-        training_args = TrainingArguments()
+        training_args = TrainingArguments(output_dir=self.output_dir)
         for key in self.__dict__.keys():
             if hasattr(training_args, key):
-                setattr(training_args, getattr(self, key))
+                try:
+                    setattr(training_args, key, getattr(self, key))
+                except Exception:
+                    continue
+
+        return TrainingArguments(
+            output_dir=self.output_dir,
+            num_train_epochs=self.num_train_epochs,
+            per_device_train_batch_size=self.per_device_train_batch_size,
+            gradient_accumulation_steps=self.gradient_accumulation_steps,
+            optim=self.optim,
+            save_steps=self.save_steps,
+            logging_steps=self.logging_steps,
+            learning_rate=self.learning_rate,
+            weight_decay=self.weight_decay,
+            fp16=self.fp16,
+            bf16=self.bf16,
+            max_grad_norm=self.max_grad_norm,
+            max_steps=self.max_steps,
+            warmup_ratio=self.warmup_ratio,
+            group_by_length=self.group_by_length,
+            lr_scheduler_type=self.lr_scheduler_type,
+            report_to=self.report_to,
+        )
+
         return training_args
 
     def load_dataset(self):
@@ -98,20 +122,21 @@ class SFTFinetuneEngine(BaseLLMFinetuneEngine):
 
         return load_dataset(self.train_dataset, split="train")
 
-    @functools.lru_cache(maxsize=1)
+    #@functools.lru_cache(maxsize=1)
     def load_tokenizer(self):
         from transformers import AutoTokenizer
 
         tokenizer = AutoTokenizer.from_pretrained(
-            self.base_model, trust_remote_code=True
+            self.base_model_name, trust_remote_code=True
         )
-        tokenizer.pad_token = self.tokenizer.eos_token
+        tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "right"
         return tokenizer
 
-    @functools.lru_cache(maxsize=1)
+    #@functools.lru_cache(maxsize=1)
     def load_basemodel(self):
         import torch
+        from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 
         self.quant_config = self.quantization_config()
 
@@ -129,12 +154,14 @@ class SFTFinetuneEngine(BaseLLMFinetuneEngine):
     def sft_trainer(self):
         from trl import SFTTrainer
 
+        print(f"<< train params -- {self.train_parameters} >>", flush=True)
+        print(f"<< train params -- {self.train_parameters.report_to} >>", flush=True)
         # Set up the SFTTrainer with the model, training data, and parameters to learn from the new dataset
         return SFTTrainer(
             model=self.base_model,
             train_dataset=self.training_data,
             peft_config=self.peft_parameters,
-            dataset_text_field="prompt",  # Dependent on your dataset
+            dataset_text_field="text",  # Dependent on your dataset
             tokenizer=self.tokenizer,
             args=self.train_parameters,
         )
@@ -143,10 +170,10 @@ class SFTFinetuneEngine(BaseLLMFinetuneEngine):
         import torch
         from llama_index.llms.huggingface import HuggingFaceLLM
 
+        self.base_model = self.load_basemodel()
         self.training_data = self.load_dataset()
         self.tokenizer = self.load_tokenizer()
-        self.base_model = self.load_basemodel()
-        self.trainer = sft_trainer()
+        self.trainer = self.sft_trainer()
 
         gc.collect()
         torch.cuda.empty_cache()
@@ -207,10 +234,3 @@ class SFTFinetuneEngine(BaseLLMFinetuneEngine):
             **model_kwargs,
         )
         return llm
-
-
-#@implements("langrunner.llama_index.SFTFinetuneEngine")
-class SFTFinetuneEngineRemote(LangrunnerRemoteResource):
-    """Remote exec compatible implementation of SFTFinetuneEngineRemote."""
-
-    pass

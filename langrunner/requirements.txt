@@ -1,6 +1,3 @@
 skypilot[aws,gcp,kubernetes]
 unique-names-generator
-dill 
-llama-index
-llama-index-finetuning
-fire
+dill
