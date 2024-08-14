@@ -82,7 +82,7 @@ pip install .[langchain]
 
 - Supervised Fine-Tuning
   
-  Navigate to the sentence_transformers directory and run:
+  Navigate to the sft directory and run:
 
   ```bash
   cd examples/llama_index/sft
@@ -91,7 +91,7 @@ pip install .[langchain]
 
 - FlagEmbedding Fine-Tuning
   
-  Navigate to the sentence_transformers directory and run:
+  Navigate to the flagembedding directory and run:
 
   ```bash
   cd examples/llama_index/flagembedding
