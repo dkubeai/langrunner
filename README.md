@@ -1,3 +1,5 @@
+![Langrunner](langrunner_image.png)
+
 ## Overview
 
 The Langrunners Execution Plugin Framework provides a versatile solution for running LLM (Large Language Models) and LMM (Large Multimodal Models) application frameworks, such as LLamaIndex, LangChain, and Autogen, across a variety of environments without requiring code modifications.
