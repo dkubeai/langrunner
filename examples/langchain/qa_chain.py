@@ -23,7 +23,7 @@ from langchain_huggingface import HuggingFacePipeline
 
 import langrunner
 HuggingFacePipeline = langrunner.runnable(HuggingFacePipeline)
-llm = HuggingFacePipeline.from_model_id(model_id="gpt2")
+llm = HuggingFacePipeline.from_model_id(model_id="gpt2", task="text-generation")
 
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser

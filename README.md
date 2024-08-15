@@ -1,4 +1,4 @@
-![Langrunner](langrunner_image.png)
+![Langrunner](images/title.png)
 
 ## Overview
 
@@ -106,6 +106,6 @@ pip install .[langchain]
 
   ```bash
   cd examples/langchain
-  python qna_chain.py
+  python qa_chain.py
   ```
   
