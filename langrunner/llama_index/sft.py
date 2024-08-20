@@ -25,7 +25,7 @@ class SFTFinetuneEngineRemote(RemoteRunnable, SFTFinetuneEngine):
             context.langclass_initparams['train_dataset'] = target_file
 
         context.langclass_initparams['output_dir'] = "/mnt/output"
-        finetune_engine = SFTFinetuneEngine(**context.langclass_init_params)
+        finetune_engine = SFTFinetuneEngine(**context.langclass_initparams)
         finetune_engine.finetune()
 
     def finetune(self):
