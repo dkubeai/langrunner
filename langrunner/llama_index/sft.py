@@ -10,7 +10,7 @@ from langrunner import RunnerSettings
 class SFTFinetuneEngineRemote(RemoteRunnable, SFTFinetuneEngine):
     """Remote exec compatible implementation of SFTFinetuneEngineRemote."""
     remote_attrs = ["finetune"]
-    remote_requirements = ['llama-index==0.10.53', 'llama-index-finetuning==0.1.10', 'llama-index-llms-huggingface==0.2.4', 'torch', 'tensorboard', 'scipy', 'peft==0.4.0', 'bitsandbytes==0.40.2', 'transformers==4.34.0', 'trl==0.4.7', 'accelerate', 'mistralai==0.4.2']
+    remote_requirements = ['llama-index==0.10.53', 'llama-index-finetuning==0.1.10', 'llama-index-llms-huggingface==0.2.4', 'torch', 'tensorboard', 'scipy', 'peft==0.4.0', 'bitsandbytes==0.40.2', 'transformers==4.37.0', 'trl==0.4.7', 'accelerate', 'mistralai==0.4.2']
     remote_default_settings = RunnerSettings(memory="64+", accelerator='A10G', accelerator_count=1)
     initialize_baseclass = False
 
