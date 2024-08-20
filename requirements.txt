@@ -1,3 +1,4 @@
 skypilot[aws,gcp,kubernetes]
 unique-names-generator
 dill
+mistralai==0.4.2

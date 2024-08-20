@@ -9,7 +9,7 @@ from langrunner import RunnerSettings
 class FlagEmbeddingFinetuneEngineRemote(RemoteRunnable, FlagEmbeddingFinetuneEngine):
     """Remote exec compatible implementation of FlagEmbeddingFinetuneEngineRemote."""
     remote_attrs = ["finetune"]
-    remote_requirements = ['llama-index==0.10.53', 'llama-index-finetuning==0.1.10', 'llama-index-llms-huggingface==0.2.4', 'FlagEmbedding', 'tensorboard']
+    remote_requirements = ['llama-index==0.10.53', 'llama-index-finetuning==0.1.10', 'llama-index-llms-huggingface==0.2.4', 'FlagEmbedding', 'tensorboard', 'mistralai==0.4.2']
     remote_default_settings = RunnerSettings(memory="64+", accelerator='A10G', accelerator_count=1)
     initialize_baseclass = False
 

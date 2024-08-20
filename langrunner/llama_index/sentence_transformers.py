@@ -16,7 +16,7 @@ class SentenceTransformersFinetuneEngineRemote(RemoteRunnable, SentenceTransform
     """Remote exec compatible implementation of SentenceTransformersFinetuneEngine."""
 
     remote_attrs = ["model", "loss", "finetune"]
-    remote_requirements = ['llama-index==0.10.53', 'llama-index-finetuning==0.1.10']
+    remote_requirements = ['llama-index==0.10.53', 'llama-index-finetuning==0.1.10', 'mistralai==0.4.2']
     remote_default_settings = RunnerSettings(memory="16+", accelerator='T4', accelerator_count=1)
     initialize_baseclass = False
     
