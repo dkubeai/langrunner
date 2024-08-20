@@ -239,7 +239,6 @@ remotes.remote_main()
 
         #sky_clustername = f"lgr-{self.runname}"
         sky_clustername = f"lgr-{task_name}"
-        sky_clustername = 'lgr-amber-mole'
 
         k8s_patchers = SkyPatcher.k8s_patchstart(self.enabled_clouds)
 
