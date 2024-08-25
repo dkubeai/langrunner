@@ -47,7 +47,6 @@ conda activate lgrenv
 Navigate to the langrunner directory and install the core dependencies:
 
 ```bash
-cd langrunner
 pip install .
 ```
 
