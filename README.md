@@ -111,8 +111,36 @@ pip install .[langchain]
   python qa_chain.py
   ```
 
+## 🛣️ Roadmap
+- [ ] Llamaindex Integration
+  - [x] Finetuning with langrunner
+    - [x] Sentence transformers finetuning
+    - [x] Implement Supervised Finetuning trainer and support it with langrunner
+    - [x] Implement Flagembedding based finetuning and support it with langrunner
+  - [ ] RAG Pipelines
+    - [ ] Ingestion pipelines with remote schedule of document processing and embeddings generation.
+    - [ ] Evaluation pipelines.
+  - [ ] Llama packs
+    - [ ] Remote runnables for llamapacks
+- [ ] Langchain Integration
+  - [ ] QnA Chain
+    - [x] Servable for huggingface model used in the chain
+  - [ ] Servable for many QnA chains in langchain
+    - [ ] Support QnA over an API
+  - [ ] Agents
+    - [ ] Deploy and serve agents on an API
+- [ ] Remote execution environments
+  - [x] AWS
+  - [x] GCP
+  - [ ] AZURE
+  - [x] KUBERNETES
+  - [ ] SLURM
+  - [ ] RAY
+
 ## 🤝 Contributing
 We welcome contributions from the community! Please feel free to open issues or submit pull requests to help improve Langrunner.
+
+The examples residing in this repository are great starting points. Please see the sections [How to setup for development] and [Running Examples] above.
 
 - Use [Github Flow](https://docs.github.com/en/get-started/using-github/github-flow), all the code changes can be submitted via pull requests.
 - Fork the repo and create your branch from `main`.
