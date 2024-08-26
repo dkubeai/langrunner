@@ -111,8 +111,14 @@ pip install .[langchain]
   python qa_chain.py
   ```
 
-### Contributing
+## 🤝 Contributing
 We welcome contributions from the community! Please feel free to open issues or submit pull requests to help improve Langrunner.
 
-### License
+- Use [Github Flow](https://docs.github.com/en/get-started/using-github/github-flow), all the code changes can be submitted via pull requests.
+- Fork the repo and create your branch from `main`.
+- Implement a feature or fix an issue
+- Make sure your code lints.
+- Create PR with branch name format of <issue number>-<short name>- 
+
+## License
 This project is licensed under the MIT License. See the LICENSE file for details.
