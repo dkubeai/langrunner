@@ -20,5 +20,3 @@ finetune_engine = SentenceTransformersFinetuneEngine(
     val_dataset=val_dataset,
 )
 finetune_engine.finetune()
-embed_model = finetune_engine.get_finetuned_model()
-print(embed_model)

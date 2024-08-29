@@ -9,7 +9,7 @@ import langrunner
 FlagEmbeddingFinetuneEngine = langrunner.runnable(FlagEmbeddingFinetuneEngine)
 finetune_engine = FlagEmbeddingFinetuneEngine(
         model_name_or_path="BAAI/bge-large-zh-v1.5",
-        train_data="data.jsonl",
+        train_data="./data.jsonl",
         output_dir="ft_emb_model")
 
 finetune_engine.finetune()

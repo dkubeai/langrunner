@@ -181,8 +181,11 @@ class SFTFinetuneEngine(BaseLLMFinetuneEngine):
         self.trainer.train()
 
         # Save the fine-tuned model's weights and tokenizer files on the cluster
-        self.trainer.model.save_pretrained(self.finetuned_modelname)
-        self.trainer.tokenizer.save_pretrained(self.finetuned_modelname)
+        finetuned_modeldir = f"{self.output_dir}/{self.finetuned_modelname}"
+        #self.trainer.model.save_pretrained(self.finetuned_modelname)
+        #self.trainer.tokenizer.save_pretrained(self.finetuned_modelname)
+        self.trainer.model.save_pretrained(finetuned_modeldir)
+        self.trainer.tokenizer.save_pretrained(finetuned_modeldir)
 
         self.merged_model = self.merge_finetuned_model()
 
@@ -195,7 +198,7 @@ class SFTFinetuneEngine(BaseLLMFinetuneEngine):
         self.finetuning_complete = True
 
         logger.info(
-            f"fine tuning complete, saved model @ {self.output_dir/self.finetuned_modelname}"
+            f"fine tuning complete, saved model @ {self.output_dir}/{self.finetuned_modelname}"
         )
 
     def get_current_job(self) -> Any:
@@ -209,14 +212,18 @@ class SFTFinetuneEngine(BaseLLMFinetuneEngine):
 
         from pathlib import Path
 
-        if not Path(f"~/{self.finetuned_modelname}").expanduser().exists():
+        finetuned_modeldir = f"{self.output_dir}/{self.finetuned_modelname}"
+        logger.info(f"Merging finetuned model from {finetuned_modeldir}")
+        if os.path.exists(finetuned_modeldir) == False:
+        #if not Path(f"{self.output_dir}/{self.finetuned_modelname}").expanduser().exists():
             raise FileNotFoundError(
                 "No fine tuned model found on the cluster. "
                 "Call the `finetune` method to run the fine tuning."
             )
 
         finetuned_model = AutoPeftModelForCausalLM.from_pretrained(
-            self.finetuned_modelname,
+            finetuned_modeldir,
+            #self.finetuned_modelname,
             device_map={"": "cuda:0"},
             torch_dtype=torch.bfloat16,
         )

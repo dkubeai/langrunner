@@ -3,11 +3,13 @@
 from abc import ABC, abstractmethod
 
 import os
+import time
 import json
 import logging
 import uuid
 import shutil
 import tempfile
+from pathlib import Path
 from contextlib import suppress
 
 from .settings import get_current_settings
@@ -18,6 +20,39 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+import atexit
+
+def on_exit():
+    # skip if being called inside the sky execution
+    if os.getenv("LANGRUNNER_SKYTASK", "false") == "true":
+        return
+
+    return
+    import sky
+
+    logging.info("Shutting down all sky services..")
+    try:
+        sky.serve.down(all=True, purge=True)
+
+        # wait for the services to go down
+        while sky.serve.status():
+            time.sleep(5)
+    except Exception as e:
+        logging.exception(e)
+
+    try:
+        logging.info("Shutting down all sky clusters..")
+        # get all the clusters
+        while (clusters := sky.status()):
+            for cluster in clusters:
+                logging.info(f"Shutting down sky cluster ({cluster['name']})")
+                sky.down(cluster_name = cluster['name'])
+            time.sleep(5)
+    except Exception as e:
+        logging.exception(e)
+
+# Register the function to be called on exit
+atexit.register(on_exit)
 
 # this function must be cached so that we dont execute if there is no change.
 def setup_langrunner(settings):
@@ -96,7 +131,21 @@ class SkyRunner(LangRunner):
         if use_runners == "auto":
             use_runners = self.providers
 
-        with open(settings.credentials_file, 'r') as fp:
+
+        _cwd_creds_path = os.path.join(os.getcwd(), "credentials.yaml")
+        _env_creds_path = os.getenv("LANGRUNNER_CREDS_FILEPATH", _cwd_creds_path)
+        _creds_paths = [settings.credentials_file, _cwd_creds_path, _env_creds_path]
+
+        _creds_file = _cwd_creds_path
+
+        for path in _creds_paths:
+            if os.path.exists(path):
+                logging.info(f"Reading credentials from path > {path}")
+                _creds_file = path
+                break
+
+        #with open(settings.credentials_file, 'r') as fp:
+        with open(_creds_file, 'r') as fp:
             creds = yaml.safe_load(fp)
 
         for runner in use_runners:
@@ -168,6 +217,7 @@ class SkyRunner(LangRunner):
     def remotecall(self):
         import sky
         from sky.serve.service_spec import SkyServiceSpec
+        from sky.serve import constants
         import unittest.mock as mock
         from unique_names_generator import get_random_name
 
@@ -182,6 +232,10 @@ class SkyRunner(LangRunner):
         workdir = os.path.expanduser(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         workdir = os.path.join(workdir, 'langrunner')
         shutil.copytree(workdir, os.path.join(temp_dir, 'langrunner'))
+
+        for pycache in Path(temp_dir).rglob('__pycache__'):
+            shutil.rmtree(pycache)
+
         workdir = temp_dir
 
         context_fp = os.path.join(context.inputdir, "remote_context.json")
@@ -212,6 +266,7 @@ remotes.remote_main()
             setup = setup_command,
             run=rc,
             workdir=workdir,
+            envs={"LANGRUNNER_SKYTASK": "true"},
         )
 
         sky_task.set_file_mounts(file_mounts)
@@ -244,7 +299,13 @@ remotes.remote_main()
 
         if context.remote_tasktype == 'service':
             readiness_path = context.REMOTE_TASK_SERVICE_PROBE_URL
-            service = SkyServiceSpec(readiness_path = readiness_path, initial_delay_seconds=3600, min_replicas=1, max_replicas=1, upscale_delay_seconds=15.0, downscale_delay_seconds=3600.0) 
+            service = SkyServiceSpec(readiness_path = readiness_path, 
+                    readiness_timeout_seconds=constants.DEFAULT_READINESS_PROBE_TIMEOUT_SECONDS,
+                    initial_delay_seconds=constants.DEFAULT_INITIAL_DELAY_SECONDS, 
+                    min_replicas=constants.DEFAULT_MIN_REPLICAS, 
+                    max_replicas=constants.DEFAULT_MIN_REPLICAS, 
+                    upscale_delay_seconds=constants.AUTOSCALER_DEFAULT_UPSCALE_DELAY_SECONDS, 
+                    downscale_delay_seconds=constants.AUTOSCALER_DEFAULT_DOWNSCALE_DELAY_SECONDS) 
             sky_task.set_service(service)
 
             services = []
@@ -294,8 +355,8 @@ remotes.remote_main()
                 install_url="(e.g., 'sudo apt install rsync' on Debian-based systems)",
             )
             # bring cluster down. In case of exceptions leave as is, user can manually copy.
-            logging.info("bringing down the sky cluster %s", sky_clustername)
-            sky.down(sky_clustername)
+            #logging.info("bringing down the sky cluster %s", sky_clustername)
+            #sky.down(sky_clustername)
             shutil.rmtree(temp_dir)
 
         SkyPatcher.k8s_patchstop(k8s_patchers)
