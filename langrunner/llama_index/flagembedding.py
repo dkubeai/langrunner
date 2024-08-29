@@ -1,4 +1,5 @@
 import os
+import shutil
 import logging
 
 from langrunner.remotes import RemoteRunnable
@@ -9,7 +10,7 @@ from langrunner import RunnerSettings
 class FlagEmbeddingFinetuneEngineRemote(RemoteRunnable, FlagEmbeddingFinetuneEngine):
     """Remote exec compatible implementation of FlagEmbeddingFinetuneEngineRemote."""
     remote_attrs = ["finetune"]
-    remote_requirements = ['llama-index==0.10.53', 'llama-index-finetuning==0.1.10', 'llama-index-llms-huggingface==0.2.4', 'FlagEmbedding', 'tensorboard', 'mistralai==0.4.2']
+    remote_requirements = ['llama-index==0.10.53', 'llama-index-finetuning==0.1.10', 'llama-index-llms-huggingface==0.2.4', 'FlagEmbedding==1.2.10', 'tensorboard', 'mistralai==0.4.2']
     remote_default_settings = RunnerSettings(memory="64+", accelerator='A10G', accelerator_count=1)
     initialize_baseclass = False
 
@@ -18,10 +19,13 @@ class FlagEmbeddingFinetuneEngineRemote(RemoteRunnable, FlagEmbeddingFinetuneEng
         context = get_current_context()
 
         train_dataset = context.langclass_initparams['train_data']
+
+        '''
         if os.path.isfile(train_dataset):
             fname = os.path.basename(self.train_dataset)
             target_file = os.path.join("/mnt/input", fname)
             context.langclass_initparams['train_data'] = target_file
+        '''
 
         context.langclass_initparams['output_dir'] = "/mnt/output"
         finetune_engine = FlagEmbeddingFinetuneEngine(**context.langclass_initparams)
@@ -35,7 +39,10 @@ class FlagEmbeddingFinetuneEngineRemote(RemoteRunnable, FlagEmbeddingFinetuneEng
             # create sym link in context.inputdir
             fname = os.path.basename(self.train_data)
             target_file = os.path.join(context.inputdir, fname)
-            os.symlink(target_file, self.train_data)
+            #os.symlink(f"{os.getcwd()}/{self.train_data}", target_file)
+            shutil.copyfile(f"{os.getcwd()}/{self.train_data}", target_file)
+            # this is where the file is going to get mounted inside sky task
+            context.langclass_initparams['train_data'] = os.path.join("/mnt/input", fname)
 
         model_dir = self.output_dir
         if os.path.islink(model_dir):

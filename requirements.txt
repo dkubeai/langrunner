@@ -1,4 +1,5 @@
-skypilot[aws,gcp,kubernetes]
+skypilot[aws,gcp,kubernetes]==0.6.1
+mistralai==0.4.2
+yaspin==3.0.2
 unique-names-generator
 dill
-mistralai==0.4.2

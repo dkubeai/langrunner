@@ -19,11 +19,12 @@ class SFTFinetuneEngineRemote(RemoteRunnable, SFTFinetuneEngine):
         context = get_current_context()
 
         train_dataset = context.langclass_initparams['train_dataset']
+        '''
         if os.path.isfile(train_dataset):
             fname = os.path.basename(self.train_dataset)
             target_file = os.path.join("/mnt/input", fname)
             context.langclass_initparams['train_dataset'] = target_file
-
+        '''
         context.langclass_initparams['output_dir'] = "/mnt/output"
         finetune_engine = SFTFinetuneEngine(**context.langclass_initparams)
         finetune_engine.finetune()
@@ -35,7 +36,9 @@ class SFTFinetuneEngineRemote(RemoteRunnable, SFTFinetuneEngine):
             # create sym link in context.inputdir
             fname = os.path.basename(self.train_dataset)
             target_file = os.path.join(context.inputdir, fname)
-            os.symlink(target_file, self.train_dataset)
+            os.symlink(f"{os.getcwd()}/{self.train_dataset}", target_file)
+            # this is where the file is going to get mounted inside sky task
+            context.langclass_initparams['train_dataset'] = os.path.join("/mnt/input", fname)
 
         model_dir = self.output_dir
         if os.path.islink(model_dir):
