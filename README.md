@@ -33,6 +33,11 @@ Langrunner is a tool designed to simplify the development of generative AI workf
 - **Resource Efficiency**: Schedule tasks on clusters with the exact resources needed, optimizing both time and cost.
 - **Simple Configuration**: Run tasks anywhere with minimal configuration changes, providing flexibility across different computing environments.
 
+## 🛠️ Built With
+
+Langrunner is built on top of an amazing opensource project [SkyPilot](https://skypilot.readthedocs.io/) - A robust AI infrastructure project that powers scalable and efficient AI deployments.
+
+We are deeply thankful to the SkyPilot team for their contributions to the AI community.
 
 ## How to setup for development
 
@@ -146,7 +151,7 @@ The examples residing in this repository are great starting points. Please see t
 - Fork the repo and create your branch from `main`.
 - Implement a feature or fix an issue
 - Make sure your code lints.
-- Create PR with branch name format of <issue number>-<short name>-
+- Create PR with branch name format of <issue_number>-<short_name>-
 
 ## Report a bug with Github [issues](https://github.com/dkubeai/langrunner/issues)
 
