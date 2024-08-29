@@ -27,7 +27,6 @@ def on_exit():
     if os.getenv("LANGRUNNER_SKYTASK", "false") == "true":
         return
 
-    return
     import sky
 
     logging.info("Shutting down all sky services..")
