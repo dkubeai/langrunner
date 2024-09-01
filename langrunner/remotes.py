@@ -108,18 +108,18 @@ class RemoteRunnable(ABC):
                 self.__langclass = base
                 if self.initialize_baseclass == False:
                     instance = base.__new__(base)
-
-                    func_signature = inspect.signature(base.__init__)
-                    pos_arg_names = list(func_signature.parameters.keys())[1:]  # Skip 'self'
-                    init_params = {**kwargs, **dict(zip(pos_arg_names, args))}
-
-                    for key, value in init_params.items():
-                        setattr(instance, key, value)
-
-                    self.__langclass_instance = instance
-                    self.__langclass_initparams = init_params
                 else:
-                    instance = base.__init__(self, *args, **kwargs)
+                    instance = base(*args, **kwargs)
+
+                func_signature = inspect.signature(base.__init__)
+                pos_arg_names = list(func_signature.parameters.keys())[1:]  # Skip 'self'
+                init_params = {**kwargs, **dict(zip(pos_arg_names, args))}
+
+                for key, value in init_params.items():
+                    setattr(instance, key, value)
+
+                self.__langclass_instance = instance
+                self.__langclass_initparams = init_params
                 self.__dict__.update(instance.__dict__)
 
         if hasattr(self, 'remote_default_settings'):

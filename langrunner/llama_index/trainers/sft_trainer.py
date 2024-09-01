@@ -47,9 +47,6 @@ class SFTFinetuneEngine(BaseLLMFinetuneEngine):
             if key != "self":
                 setattr(self, key, value)
 
-        self.peft_parameters = self.peft_params()
-        self.train_parameters = self.training_params()
-
         self.finetuned_modelname = "finetuned_model"
         self.merged_modelname = "merged_model"
         self.merged_modelpath = os.path.join(self.output_dir, self.merged_modelname)
@@ -170,6 +167,8 @@ class SFTFinetuneEngine(BaseLLMFinetuneEngine):
         import torch
         from llama_index.llms.huggingface import HuggingFaceLLM
 
+        self.peft_parameters = self.peft_params()
+        self.train_parameters = self.training_params()
         self.base_model = self.load_basemodel()
         self.training_data = self.load_dataset()
         self.tokenizer = self.load_tokenizer()

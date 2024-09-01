@@ -4,7 +4,7 @@ with open("requirements.txt") as f:
     required = f.read().splitlines()
 
 llamaindex_required = ['llama-index==0.10.53', 'llama-index-core==0.10.53.post1', 'llama-index-embeddings-adapter==0.1.3', 'llama-index-embeddings-openai==0.1.10',
-        'llama-index-finetuning==0.1.10', 'llama-index-llms-huggingface==0.2.4', 'llama-index-llms-openai==0.1.25', 'llama-index-readers-file==0.1.29', 'mistralai==0.4.2', 'transformers==4.37.0' ]
+        'llama-index-finetuning==0.1.10', 'llama-index-llms-huggingface==0.2.4', 'llama-index-llms-openai==0.1.25', 'llama-index-readers-file==0.1.29', 'mistralai==0.4.2' ]
 
 langchain_required = ['langchain==0.2.10', 'langchain-community==0.2.9', 'langchain-core==0.2.22', 'langchain-huggingface==0.0.3', 'langchain-openai==0.1.17', 'langchain-text-splitters==0.2.2', 'langchainhub==0.1.20', 'bs4', 'faiss-cpu']
 
