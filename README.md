@@ -155,13 +155,13 @@ The examples residing in this repository are great starting points. Please see t
 
 ## Report a bug with Github [issues](https://github.com/dkubeai/langrunner/issues)
 
-Discovered a bug ? Please raise an issue or reach out to us on [Slack] (https://slack.com/invite/dkubeai/langrunner)
+Discovered a bug ? Please raise an issue or reach out to us on [Slack](https://slack.com/invite/dkubeai/langrunner)
 
 Ready to help? Take on the issue and send us a Pull Request.
 
 ## New Feature requests
 
-Please raise an issue and tag it as an `FeatureRequest`. Provide as much information as possible about the new feature, and we will schedule it for implementation in the project.
+Please raise an issue and tag it as a `FeatureRequest`. Provide as much information as possible about the new feature, and we will schedule it for implementation in the project.
 
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
